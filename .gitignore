@@ -1,0 +1,27 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.eggs/
+build/
+dist/
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# Project outputs: ignore ad-hoc runs, but keep the three demo charts the README embeds.
+results/*
+!results/pattern_comparison.png
+!results/hit_rates.png
+!results/capacity_sweep.png
+data/traces/*
+!data/traces/.gitkeep
+
+# OS / editor
+.DS_Store
+.idea/
+.vscode/
