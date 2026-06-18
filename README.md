@@ -37,18 +37,18 @@ Real workload traces, cache capacity = 48 (ML trained on a held-out 60% split)
 ## Why this is interesting
 
 A cache keeps a small set of items fast to reach. When it fills up it must evict
-something, and *which* item it drops decides the hit rate. **LRU** — evict whatever was
+something, and which item it drops decides the hit rate. LRU — evict whatever was
 used longest ago — is the textbook default. It shines when the recent past predicts the
 near future, and fails badly on scans/loops slightly larger than the cache, where it
 throws out the very line it is about to need again.
 
-**Bélády's optimal** evicts the line reused farthest in the future. It is provably the
+**Belady's optimal** evicts the line reused farthest in the future. It is provably the
 best policy possible — but it needs to see the future, so it cannot run for real. It is
 the ceiling everything else is measured against.
 
-This project sits in between: it learns, *offline*, what soon-to-be-reused lines look
-like, then applies that judgement *online* where the future is hidden. It is a compact,
-explainable take on the "learned cache replacement" idea (cf. Hawkeye / Learning Bélády).
+This project sits in between: it learns, offline, what soon to be reused lines look
+like, then applies that judgement online where the future is hidden. It is a compact,
+explainable take on the "learned cache replacement" idea
 
 ## How the learned policy works
 
