@@ -55,3 +55,16 @@ def test_load_txt_tolerates_comments_and_extra_columns(tmp_path):
     path = tmp_path / "t.txt"
     path.write_text("# header comment\n10 read\n20 write\n\n30\n")
     assert load_trace(path) == [10, 20, 30]
+
+
+@pytest.mark.parametrize("name", ["matmul", "linkedlist", "bst"])
+def test_committed_real_traces_load(name):
+    """The real captured traces ship with the repo and must parse cleanly."""
+    from pathlib import Path
+
+    path = Path(__file__).resolve().parent.parent / "data" / "traces" / f"{name}.txt"
+    if not path.exists():
+        pytest.skip(f"{name}.txt not captured; run scripts/capture_traces.sh")
+    trace = load_trace(path)
+    assert len(trace) > 1_000
+    assert all(isinstance(a, int) and a >= 0 for a in trace[:100])

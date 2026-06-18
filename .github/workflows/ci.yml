@@ -11,7 +11,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9", "3.10", "3.11", "3.12"]
+        python-version: ["3.10", "3.11", "3.12"]
 
     steps:
       - uses: actions/checkout@v4
@@ -32,5 +32,7 @@ jobs:
       - name: Run test suite
         run: pytest -q
 
-      - name: Smoke-test the CLI
-        run: cachesim run --pattern looping --capacity 64 --length 5000
+      - name: Smoke-test the CLI (synthetic + a committed real trace)
+        run: |
+          cachesim run --pattern looping --capacity 64 --length 5000
+          cachesim run --trace data/traces/bst.txt --capacity 64

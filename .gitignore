@@ -20,6 +20,10 @@ results/*
 !results/capacity_sweep.png
 data/traces/*
 !data/traces/.gitkeep
+# Keep the small real captured traces (regenerate with scripts/capture_traces.sh).
+!data/traces/matmul.txt
+!data/traces/linkedlist.txt
+!data/traces/bst.txt
 
 # OS / editor
 .DS_Store

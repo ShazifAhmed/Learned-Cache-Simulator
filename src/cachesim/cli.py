@@ -48,22 +48,25 @@ def _cmd_gen_trace(args: argparse.Namespace) -> int:
     return 0
 
 
-def _resolve_trace(args: argparse.Namespace) -> List[int]:
-    """Load a trace from --trace, or generate one from the pattern flags."""
+def _resolve_traces(args: argparse.Namespace):
+    """Return (train_trace, eval_trace, label).
+
+    For a real trace file we hold out the back 40% for evaluation and train the ML
+    policy on the front 60% — the model never sees the segment it's scored on. For a
+    synthetic trace we train on a *different* RNG seed, which serves the same purpose.
+    """
     if getattr(args, "trace", None):
-        return load_trace(args.trace)
-    return generate_trace(
+        full = load_trace(args.trace)
+        split = int(len(full) * 0.6)
+        return full[:split], full[split:], f"{args.trace} (held-out back 40%)"
+
+    eval_trace = generate_trace(
         pattern=args.pattern,
         length=args.length,
         address_space=args.address_space,
         working_set=args.working_set,
         seed=args.seed,
     )
-
-
-def _cmd_run(args: argparse.Namespace) -> int:
-    eval_trace = _resolve_trace(args)
-    # Train on a different seed so we measure generalization, not memorization.
     train_trace = generate_trace(
         pattern=args.pattern,
         length=args.length,
@@ -71,6 +74,11 @@ def _cmd_run(args: argparse.Namespace) -> int:
         working_set=args.working_set,
         seed=args.seed + 1000,
     )
+    return train_trace, eval_trace, f"pattern={args.pattern}"
+
+
+def _cmd_run(args: argparse.Namespace) -> int:
+    train_trace, eval_trace, label = _resolve_traces(args)
     report = run_benchmark(
         eval_trace,
         capacity=args.capacity,
@@ -78,7 +86,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
         ml_model=args.model,
         reuse_window=args.reuse_window,
     )
-    _print_report(report, f"Benchmark @ capacity={args.capacity}")
+    _print_report(report, f"Benchmark [{label}] @ capacity={args.capacity}")
 
     if args.chart:
         from cachesim.plotting import plot_hit_rates
@@ -89,14 +97,7 @@ def _cmd_run(args: argparse.Namespace) -> int:
 
 
 def _cmd_sweep(args: argparse.Namespace) -> int:
-    eval_trace = _resolve_trace(args)
-    train_trace = generate_trace(
-        pattern=args.pattern,
-        length=args.length,
-        address_space=args.address_space,
-        working_set=args.working_set,
-        seed=args.seed + 1000,
-    )
+    train_trace, eval_trace, _ = _resolve_traces(args)
     capacities = [int(c) for c in args.capacities.split(",")]
     sweep = sweep_capacity(
         eval_trace,
@@ -140,6 +141,26 @@ def _cmd_demo(args: argparse.Namespace) -> int:
         _print_report(reports[pat], f"[demo] pattern={pat} capacity={args.capacity}")
     plot_pattern_comparison(reports, outdir / "pattern_comparison.png")
 
+    # 1b. Real captured workload traces, if present (run scripts/capture_traces.sh).
+    real_dir = Path("data/traces")
+    real_reports = {}
+    for name in ("matmul", "linkedlist", "bst"):
+        fp = real_dir / f"{name}.txt"
+        if not fp.exists():
+            continue
+        full = load_trace(fp)
+        split = int(len(full) * 0.6)
+        real_reports[name] = run_benchmark(
+            full[split:], capacity=args.capacity, train_trace=full[:split], ml_model=args.model
+        )
+        _print_report(real_reports[name], f"[demo] REAL trace '{name}' capacity={args.capacity}")
+    if real_reports:
+        plot_pattern_comparison(
+            real_reports,
+            outdir / "real_traces.png",
+            title=f"Real workload traces: hit rate by policy (capacity = {args.capacity})",
+        )
+
     # 2. Single-pattern bar chart on the skewed (zipfian) workload.
     plot_hit_rates(
         reports["zipfian"],
@@ -156,10 +177,10 @@ def _cmd_demo(args: argparse.Namespace) -> int:
     )
     plot_capacity_sweep(sweep, outdir / "capacity_sweep.png")
 
-    print(
-        f"\nCharts written to {outdir}/: "
-        "pattern_comparison.png, hit_rates.png, capacity_sweep.png"
-    )
+    charts = "pattern_comparison.png, hit_rates.png, capacity_sweep.png"
+    if real_reports:
+        charts += ", real_traces.png"
+    print(f"\nCharts written to {outdir}/: {charts}")
     return 0
 
 
