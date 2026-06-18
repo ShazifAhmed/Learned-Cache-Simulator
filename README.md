@@ -4,14 +4,19 @@
 ![Python](https://img.shields.io/badge/python-3.10%E2%80%933.12-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**A small learned cache-replacement policy that improves hit rate by up to ~20 percentage
-points over LRU on real program traces** — benchmarked against LRU, LFU, FIFO, and
-Bélády's optimal (the provable upper bound), with one-command reproduction and charts.
+A cache can only hold a few things at once — like a desk that only fits a handful of books. 
+When it's full and you need something new, you have to put one book back on the shelf. 
+Which one you remove decides how often you avoid a slow trip to the shelf later.
 
-The question: *can a lightweight ML model make better eviction decisions than the
-decades-old "least recently used" rule?* On real workloads — matrix multiply,
-pointer-chasing, tree lookups — it can, and this repo measures exactly by how much (and
-shows the cases where it doesn't).
+The standard rule, used for decades, is LRU: remove whatever you haven't touched in the longest time.
+This project asks a simple question: can a small machine learning model make smarter "what to remove" choices than that old rule?
+
+The answer is yes. 
+Trained on real programs (matrix math, following chains of links, looking things up in a tree), 
+the model finds the right item in the cache up to ~20% more often than LRU — getting close to the best score 
+that's theoretically possible. The project also honestly shows the cases where the old rule still wins.
+
+Everything runs with one command and produces charts, so you can see the results for yourself.
 
 ![real traces](results/real_traces.png)
 
@@ -30,18 +35,18 @@ Real workload traces, cache capacity = 48 (ML trained on a held-out 60% split)
 ## Why this is interesting
 
 A cache keeps a small set of items fast to reach. When it fills up it must evict
-something, and *which* item it drops decides the hit rate. **LRU** — evict whatever was
+something, and which item it drops decides the hit rate. LRU — evict whatever was
 used longest ago — is the textbook default. It shines when the recent past predicts the
 near future, and fails badly on scans/loops slightly larger than the cache, where it
 throws out the very line it is about to need again.
 
-**Bélády's optimal** evicts the line reused farthest in the future. It is provably the
+**Belady's optimal** evicts the line reused farthest in the future. It is provably the
 best policy possible — but it needs to see the future, so it cannot run for real. It is
 the ceiling everything else is measured against.
 
-This project sits in between: it learns, *offline*, what soon-to-be-reused lines look
-like, then applies that judgement *online* where the future is hidden. It is a compact,
-explainable take on the "learned cache replacement" idea (cf. Hawkeye / Learning Bélády).
+This project sits in between: it learns, offline, what soon to be reused lines look
+like, then applies that judgement online where the future is hidden. It is a compact,
+explainable take on the "learned cache replacement" idea
 
 ## How the learned policy works
 
