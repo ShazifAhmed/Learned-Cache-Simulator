@@ -1,17 +1,24 @@
 # learned-cache-sim
 
-[![CI](https://github.com/USERNAME/learned-cache-sim/actions/workflows/ci.yml/badge.svg)](https://github.com/USERNAME/learned-cache-sim/actions/workflows/ci.yml)
+[![CI](https://github.com/ShazifAhmed/Learned-Cache-Simulator/actions/workflows/ci.yml/badge.svg)](https://github.com/ShazifAhmed/Learned-Cache-Simulator/actions/workflows/ci.yml)
 ![Python](https://img.shields.io/badge/python-3.10%E2%80%933.12-blue)
 ![License](https://img.shields.io/badge/license-MIT-green)
 
-**A small learned cache-replacement policy that improves hit rate by up to ~20 percentage
-points over LRU on real program traces** — benchmarked against LRU, LFU, FIFO, and
-Bélády's optimal (the provable upper bound), with one-command reproduction and charts.
+A cache can only hold a few things at once — like a desk that only fits a handful of
+books. When it's full and you need something new, you have to put one book back on the
+shelf. Which one you remove decides how often you avoid a slow trip to the shelf later.
 
-The question: *can a lightweight ML model make better eviction decisions than the
-decades-old "least recently used" rule?* On real workloads — matrix multiply,
-pointer-chasing, tree lookups — it can, and this repo measures exactly by how much (and
-shows the cases where it doesn't).
+The standard rule, used for decades, is **LRU**: remove whatever you haven't touched in
+the longest time. This project asks a simple question: can a small machine-learning model
+make smarter "what to remove" choices than that old rule?
+
+The answer is yes. Trained on real programs (matrix math, following chains of links,
+looking things up in a tree), the model finds the right item in the cache up to ~20% more
+often than LRU — getting close to the best score that's theoretically possible. The
+project also honestly shows the cases where the old rule still wins.
+
+Everything runs with one command and produces charts, so you can see the results for
+yourself.
 
 ![real traces](results/real_traces.png)
 
@@ -63,8 +70,8 @@ memorizing the test trace.**
 ## Reproduce everything
 
 ```bash
-git clone https://github.com/USERNAME/learned-cache-sim.git
-cd learned-cache-sim
+git clone https://github.com/ShazifAhmed/Learned-Cache-Simulator.git
+cd Learned-Cache-Simulator
 make install          # pip install -e ".[dev]"
 make traces           # capture the real workload traces (needs a C compiler)
 make demo             # benchmark every policy and regenerate all charts in results/
