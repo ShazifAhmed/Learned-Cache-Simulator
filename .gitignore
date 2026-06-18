@@ -13,11 +13,12 @@ venv/
 .coverage
 htmlcov/
 
-# Project outputs: ignore ad-hoc runs, but keep the three demo charts the README embeds.
+# Project outputs: ignore ad-hoc runs, but keep the four demo charts the README embeds.
 results/*
 !results/pattern_comparison.png
 !results/hit_rates.png
 !results/capacity_sweep.png
+!results/real_traces.png
 data/traces/*
 !data/traces/.gitkeep
 # Keep the small real captured traces (regenerate with scripts/capture_traces.sh).
